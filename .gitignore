@@ -1,0 +1,6 @@
+node_modules/
+.env
+fisler.json
+sessions.json
+server_out.log
+server_error.log

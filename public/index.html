@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fiş Okuyucu – BIGsafer</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #f4f6f8; color: #1a1a1a; min-height: 100vh; }
+
+  /* ── GİRİŞ EKRANI ── */
+  #splash {
+    position: fixed; inset: 0; background: #f4f6f8;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; transition: opacity 0.4s ease;
+  }
+  #splash.hide { opacity: 0; pointer-events: none; }
+
+  .splash-card {
+    width: 360px;
+    border: 6px solid transparent;
+    border-radius: 20px;
+    background:
+      linear-gradient(white, white) padding-box,
+      linear-gradient(160deg, #00c853, #00695c) border-box;
+    padding: 48px 36px 40px;
+    text-align: center;
+    box-shadow: 0 8px 40px rgba(0,180,80,0.13);
+  }
+  .splash-series { font-size: 0.82rem; font-weight: 600; color: #555; letter-spacing: 0.04em; margin-bottom: 24px; text-transform: uppercase; }
+  .splash-title { font-size: 4rem; font-weight: 900; line-height: 1; color: #111; letter-spacing: -2px; }
+  .splash-title span { display: block; font-size: 2.4rem; font-weight: 900; color: #111; letter-spacing: -1px; }
+  .splash-footer { margin-top: 10px; font-size: 0.8rem; color: #666; line-height: 1.5; }
+
+  .login-box { margin-top: 32px; text-align: left; }
+  .login-box label { font-size: 0.82rem; font-weight: 600; color: #444; display: block; margin-bottom: 6px; }
+  .login-box input {
+    width: 100%; padding: 11px 14px; border: 1.5px solid #d1d5db;
+    border-radius: 10px; font-size: 1rem; outline: none;
+    transition: border-color 0.2s; background: #fafafa;
+  }
+  .login-box input:focus { border-color: #00c853; background: #fff; }
+  .login-box input::placeholder { color: #b0b8c4; }
+  .login-error { color: #ef4444; font-size: 0.8rem; margin-top: 6px; min-height: 18px; }
+  .splash-btn {
+    margin-top: 16px; width: 100%;
+    background: linear-gradient(135deg, #00c853, #00897b);
+    color: white; border: none; border-radius: 10px;
+    padding: 13px; font-size: 1rem; font-weight: 700;
+    cursor: pointer; transition: opacity 0.2s;
+  }
+  .splash-btn:hover { opacity: 0.88; }
+  .splash-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ── ANA UYGULAMA ── */
+  #app { display: none; }
+
+  header {
+    background: #fff; border-bottom: 1px solid #e2e8f0;
+    padding: 14px 32px; display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  header h1 { font-size: 1.2rem; font-weight: 700; color: #111; }
+  .header-right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+  .header-tel { font-size: 0.8rem; color: #64748b; background: #f1f5f9; padding: 4px 12px; border-radius: 20px; }
+  .cikis-btn { background: none; border: 1px solid #e2e8f0; color: #94a3b8; border-radius: 8px; padding: 5px 12px; font-size: 0.78rem; cursor: pointer; transition: all 0.2s; }
+  .cikis-btn:hover { border-color: #ef4444; color: #ef4444; }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+
+  .upload-box {
+    border: 2px dashed #00c853; border-radius: 16px; padding: 48px 24px;
+    text-align: center; cursor: pointer; background: #fff; margin-bottom: 32px;
+    transition: background 0.2s, border-color 0.2s;
+    box-shadow: 0 2px 12px rgba(0,180,80,0.07);
+  }
+  .upload-box:hover, .upload-box.drag { background: #f0fff4; border-color: #00897b; }
+  .upload-box input { display: none; }
+  .upload-box .icon { font-size: 3rem; margin-bottom: 12px; }
+  .upload-box p { color: #64748b; font-size: 0.95rem; }
+  .upload-box p strong { color: #00897b; }
+
+  #preview-wrap { display: none; margin-bottom: 32px; text-align: center; }
+  #preview-wrap img { max-height: 260px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+  #scan-btn {
+    margin-top: 16px;
+    background: linear-gradient(135deg, #00c853, #00897b);
+    color: white; border: none; border-radius: 8px;
+    padding: 10px 28px; font-size: 1rem; font-weight: 600;
+    cursor: pointer; transition: opacity 0.2s;
+  }
+  #scan-btn:hover { opacity: 0.88; }
+  #scan-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+  #toast { position: fixed; top: 20px; right: 20px; background: #22c55e; color: white; padding: 12px 20px; border-radius: 8px; font-size: 0.9rem; display: none; z-index: 9999; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+  #toast.err { background: #ef4444; }
+
+  .table-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .table-header h2 { font-size: 1.1rem; font-weight: 700; color: #111; }
+  .badge { background: #dcfce7; color: #166534; padding: 2px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+  .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; background: #fff; box-shadow: 0 2px 12px rgba(0,0,0,0.05); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+  thead { background: #f8fafc; }
+  th { padding: 12px 16px; text-align: left; color: #64748b; font-weight: 600; white-space: nowrap; border-bottom: 1px solid #e2e8f0; }
+  td { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; white-space: nowrap; color: #1a1a1a; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f0fff4; }
+  .amount { text-align: right; font-variant-numeric: tabular-nums; }
+  .green { color: #16a34a; font-weight: 600; }
+  .muted { color: #94a3b8; font-size: 0.8rem; }
+  .del-btn { background: none; border: none; color: #cbd5e1; cursor: pointer; font-size: 1rem; padding: 4px 8px; border-radius: 6px; transition: color 0.2s; }
+  .del-btn:hover { color: #ef4444; }
+  .empty { padding: 48px; text-align: center; color: #94a3b8; }
+  .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #excel-btn { background: #f0fff4; color: #166534; border: 1px solid #bbf7d0; border-radius: 8px; padding: 8px 18px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+  #excel-btn:hover { background: #dcfce7; }
+</style>
+</head>
+<body>
+
+<!-- GİRİŞ EKRANI -->
+<div id="splash">
+  <div class="splash-card">
+    <div class="splash-series">Faydalı ürünler serisi</div>
+    <div class="splash-title">FİŞ<span>okuyucu</span></div>
+    <div class="splash-footer">BIGsafer dijital ekosisteminde geliştirilmiştir.</div>
+
+    <div class="login-box">
+      <label>Cep Telefonu Numarası</label>
+      <input type="tel" id="telefon-input" placeholder="05XX XXX XX XX" maxlength="15"
+        onkeydown="if(event.key==='Enter') girisYap()">
+      <div class="login-error" id="login-error"></div>
+      <button class="splash-btn" id="giris-btn" onclick="girisYap()">Giriş Yap</button>
+    </div>
+  </div>
+</div>
+
+<!-- ANA UYGULAMA -->
+<div id="app">
+  <header>
+    <span>🧾</span>
+    <h1>Fiş Okuyucu</h1>
+    <div class="header-right">
+      <span class="header-tel" id="header-tel"></span>
+      <button class="cikis-btn" onclick="cikisYap()">Çıkış</button>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <div class="upload-box" id="drop-zone">
+      <input type="file" id="file-input" accept="image/*">
+      <div class="icon">📷</div>
+      <p><strong>Tıkla</strong> veya fişi buraya sürükle</p>
+      <p style="margin-top:6px">PNG, JPG, WEBP · Maks 8 MB</p>
+    </div>
+
+    <div id="preview-wrap">
+      <img id="preview-img" src="" alt="önizleme">
+      <br>
+      <button id="scan-btn" onclick="scanFis()">🔍 Fişi Oku</button>
+    </div>
+
+    <div class="table-header">
+      <h2>Kayıtlı Fişler <span class="badge" id="count">0</span></h2>
+      <button id="excel-btn" onclick="exportExcel()">📥 Excel'e Aktar</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Tarih</th><th>Satıcı</th><th>VKN</th>
+            <th>Fiş No</th><th class="amount">KDV</th>
+            <th class="amount">Genel Toplam</th><th>Eklendi</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="table-body">
+          <tr><td colspan="9" class="empty">Henüz fiş eklenmedi</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+let sessionToken = localStorage.getItem('fis_token');
+let sessionTel   = localStorage.getItem('fis_tel');
+
+// Önceki oturum varsa direkt uygulama aç
+if (sessionToken && sessionTel) openApp(sessionToken, sessionTel);
+
+async function girisYap() {
+  const telefon = document.getElementById('telefon-input').value.trim();
+  const errEl   = document.getElementById('login-error');
+  const btn     = document.getElementById('giris-btn');
+  errEl.textContent = '';
+
+  if (!telefon || telefon.replace(/\D/g,'').length < 10) {
+    errEl.textContent = 'Geçerli bir telefon numarası girin.';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Giriş yapılıyor...';
+
+  try {
+    const r = await fetch('/api/giris', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ telefon })
+    });
+    const json = await r.json();
+    if (!json.ok) throw new Error(json.error);
+
+    localStorage.setItem('fis_token', json.token);
+    localStorage.setItem('fis_tel', json.telefon);
+    openApp(json.token, json.telefon);
+  } catch (e) {
+    errEl.textContent = e.message;
+    btn.disabled = false;
+    btn.textContent = 'Giriş Yap';
+  }
+}
+
+function openApp(token, tel) {
+  sessionToken = token;
+  sessionTel   = tel;
+  document.getElementById('header-tel').textContent = formatTel(tel);
+  const splash = document.getElementById('splash');
+  splash.classList.add('hide');
+  setTimeout(() => {
+    splash.style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadTable();
+  }, 400);
+}
+
+async function cikisYap() {
+  await fetch('/api/cikis', { method: 'POST', headers: { 'x-session-token': sessionToken } }).catch(()=>{});
+  localStorage.removeItem('fis_token');
+  localStorage.removeItem('fis_tel');
+  location.reload();
+}
+
+function formatTel(tel) {
+  const d = tel.replace(/\D/g,'');
+  return d.length === 11 ? `${d.slice(0,4)} ${d.slice(4,7)} ${d.slice(7,9)} ${d.slice(9)}`
+       : d.length === 10 ? `0${d.slice(0,3)} ${d.slice(3,6)} ${d.slice(6,8)} ${d.slice(8)}`
+       : tel;
+}
+
+function authHeaders() {
+  return { 'x-session-token': sessionToken };
+}
+
+// Drag & drop
+const dropZone  = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+let selectedFile = null;
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag');
+  if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', () => { if (fileInput.files[0]) setFile(fileInput.files[0]); });
+
+function setFile(f) {
+  selectedFile = f;
+  document.getElementById('preview-img').src = URL.createObjectURL(f);
+  document.getElementById('preview-wrap').style.display = 'block';
+}
+
+async function scanFis() {
+  if (!selectedFile) return;
+  const btn = document.getElementById('scan-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Okunuyor...';
+  try {
+    const fd = new FormData();
+    fd.append('image', selectedFile);
+    const r = await fetch('/api/fis-oku', { method: 'POST', headers: authHeaders(), body: fd });
+    if (r.status === 401) { showToast('Oturum süresi doldu, yeniden giriş yapın', true); cikisYap(); return; }
+    const json = await r.json();
+    if (!json.ok) throw new Error(json.error);
+    showToast('Fiş başarıyla okundu!');
+    selectedFile = null;
+    document.getElementById('preview-wrap').style.display = 'none';
+    fileInput.value = '';
+    loadTable();
+  } catch (e) {
+    showToast(e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '🔍 Fişi Oku';
+  }
+}
+
+async function loadTable() {
+  const r = await fetch('/api/fisler', { headers: authHeaders() });
+  if (r.status === 401) { cikisYap(); return; }
+  const fisler = await r.json();
+  document.getElementById('count').textContent = fisler.length;
+  const tbody = document.getElementById('table-body');
+  if (!fisler.length) {
+    tbody.innerHTML = '<tr><td colspan="9" class="empty">Henüz fiş eklenmedi</td></tr>';
+    return;
+  }
+  tbody.innerHTML = fisler.map((f, i) => `
+    <tr data-id="${f.id}">
+      <td class="muted">${i + 1}</td>
+      <td>${f.tarih || '-'}</td>
+      <td>${f.satici || '-'}</td>
+      <td class="muted">${f.vkn || '-'}</td>
+      <td class="muted">${f.fisNo || '-'}</td>
+      <td class="amount">${f.toplamKdv || '-'}</td>
+      <td class="amount green">${f.genelToplam || '-'} ₺</td>
+      <td class="muted">${f.eklenme}</td>
+      <td><button class="del-btn" onclick="deleteFis(${f.id})" title="Sil">🗑</button></td>
+    </tr>
+  `).join('');
+}
+
+async function deleteFis(id) {
+  if (!confirm('Bu fişi silmek istiyor musunuz?')) return;
+  await fetch('/api/fisler/' + id, { method: 'DELETE', headers: authHeaders() });
+  loadTable();
+}
+
+function showToast(msg, err = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = err ? 'err' : '';
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3000);
+}
+
+function exportExcel() {
+  const rows = [['#','Tarih','Satıcı','VKN','Fiş No','KDV','Genel Toplam','Eklendi']];
+  document.querySelectorAll('#table-body tr[data-id]').forEach((tr, i) => {
+    const cells = tr.querySelectorAll('td');
+    rows.push([i+1, cells[1].textContent, cells[2].textContent, cells[3].textContent,
+               cells[4].textContent, cells[5].textContent, cells[6].textContent, cells[7].textContent]);
+  });
+  if (rows.length === 1) { showToast('Aktarılacak veri yok', true); return; }
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `fisler_${new Date().toLocaleDateString('tr-TR').replace(/\./g,'-')}.csv`;
+  a.click();
+}
+</script>
+</body>
+</html>
