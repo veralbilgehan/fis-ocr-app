@@ -238,7 +238,9 @@
       <button class="splash-btn" id="giris-btn" onclick="girisYap()">Giriş Yap</button>
     </div>
     <div class="pricing-link">
-      <a onclick="document.getElementById('pricing-overlay').classList.add('show')">Fiyatlandırma planlarını gör →</a>
+      <a tabindex="0"
+         onclick="document.getElementById('pricing-overlay').classList.add('show')"
+         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('pricing-overlay').classList.add('show')}">Fiyatlandırma planlarını gör →</a>
     </div>
   </div>
 </div>
