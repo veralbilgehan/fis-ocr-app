@@ -115,6 +115,110 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   #excel-btn { background: #f0fff4; color: #166534; border: 1px solid #bbf7d0; border-radius: 8px; padding: 8px 18px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
   #excel-btn:hover { background: #dcfce7; }
+
+  /* ── FİYATLANDIRMA ── */
+  .pricing-link {
+    margin-top: 20px; text-align: center;
+    font-size: 0.82rem; color: #64748b;
+  }
+  .pricing-link a {
+    color: #00897b; font-weight: 600; text-decoration: none;
+    cursor: pointer; border-bottom: 1px dashed #00897b;
+  }
+  .pricing-link a:hover { color: #00c853; border-bottom-color: #00c853; }
+
+  #pricing-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 2000;
+    overflow-y: auto;
+    padding: 32px 16px;
+  }
+  #pricing-overlay.show { display: flex; align-items: flex-start; justify-content: center; }
+
+  .pricing-modal {
+    background: #fff; border-radius: 20px;
+    padding: 40px 32px 36px;
+    max-width: 860px; width: 100%;
+    box-shadow: 0 16px 60px rgba(0,0,0,0.2);
+  }
+  .pricing-modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .pricing-modal-header h2 {
+    font-size: 1.6rem; font-weight: 900; color: #111; letter-spacing: -0.5px;
+  }
+  .pricing-close {
+    background: none; border: 1px solid #e2e8f0; border-radius: 8px;
+    padding: 6px 14px; font-size: 0.85rem; color: #64748b;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .pricing-close:hover { border-color: #ef4444; color: #ef4444; }
+
+  .pricing-subtitle {
+    font-size: 0.9rem; color: #64748b; margin-bottom: 32px;
+  }
+
+  .pricing-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 18px;
+    margin-bottom: 24px;
+  }
+
+  .pricing-card {
+    border: 2px solid #e2e8f0; border-radius: 16px;
+    padding: 24px 20px 22px;
+    display: flex; flex-direction: column;
+    background: #fafafa;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    position: relative;
+  }
+  .pricing-card:hover {
+    border-color: #00c853;
+    box-shadow: 0 4px 24px rgba(0,180,80,0.13);
+  }
+  .pricing-card.popular {
+    border-color: #00c853;
+    background: linear-gradient(160deg, #f0fff4, #e6fffb);
+    box-shadow: 0 6px 28px rgba(0,180,80,0.15);
+  }
+  .popular-badge {
+    position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
+    background: linear-gradient(135deg, #00c853, #00897b);
+    color: #fff; font-size: 0.7rem; font-weight: 700;
+    padding: 3px 14px; border-radius: 20px;
+    white-space: nowrap; letter-spacing: 0.03em;
+  }
+  .plan-name {
+    font-size: 0.78rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; color: #64748b; margin-bottom: 10px;
+  }
+  .plan-price {
+    font-size: 2rem; font-weight: 900; color: #111;
+    line-height: 1; margin-bottom: 4px;
+  }
+  .plan-price span { font-size: 1rem; font-weight: 600; color: #64748b; }
+  .plan-scans {
+    font-size: 0.88rem; font-weight: 700; color: #00897b;
+    margin: 10px 0 14px;
+  }
+  .plan-features {
+    list-style: none; padding: 0; margin: 0;
+    font-size: 0.8rem; color: #475569;
+    flex: 1;
+  }
+  .plan-features li { padding: 4px 0; padding-left: 18px; position: relative; }
+  .plan-features li::before { content: "✓"; position: absolute; left: 0; color: #00c853; font-weight: 700; }
+
+  .pricing-note {
+    background: #f0fff4; border: 1px solid #bbf7d0;
+    border-radius: 10px; padding: 12px 16px;
+    font-size: 0.82rem; color: #166534;
+    display: flex; align-items: center; gap: 8px;
+  }
 </style>
 </head>
 <body>
@@ -132,6 +236,83 @@
         onkeydown="if(event.key==='Enter') girisYap()">
       <div class="login-error" id="login-error"></div>
       <button class="splash-btn" id="giris-btn" onclick="girisYap()">Giriş Yap</button>
+    </div>
+    <div class="pricing-link">
+      <a tabindex="0"
+         onclick="document.getElementById('pricing-overlay').classList.add('show')"
+         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('pricing-overlay').classList.add('show')}">Fiyatlandırma planlarını gör →</a>
+    </div>
+  </div>
+</div>
+
+<!-- FİYATLANDIRMA OVERLAY -->
+<div id="pricing-overlay">
+  <div class="pricing-modal">
+    <div class="pricing-modal-header">
+      <h2>Fiyatlandırma</h2>
+      <button class="pricing-close" onclick="document.getElementById('pricing-overlay').classList.remove('show')">✕ Kapat</button>
+    </div>
+    <p class="pricing-subtitle">İhtiyacınıza uygun planı seçin. Tüm planlarda kullanılmayan taramalar sonraki yıla devredilir.</p>
+
+    <div class="pricing-cards">
+
+      <div class="pricing-card">
+        <div class="plan-name">Başlangıç</div>
+        <div class="plan-price">59 <span>TL</span></div>
+        <div class="plan-scans">100 Fiş Tarama</div>
+        <ul class="plan-features">
+          <li>100 fiş tarama hakkı</li>
+          <li>OCR ile otomatik okuma</li>
+          <li>Excel'e aktarım</li>
+          <li>Kullanılmayan taramalar yıla devir</li>
+        </ul>
+      </div>
+
+      <div class="pricing-card">
+        <div class="plan-name">Orta</div>
+        <div class="plan-price">259 <span>TL</span></div>
+        <div class="plan-scans">500 Fiş Tarama</div>
+        <ul class="plan-features">
+          <li>500 fiş tarama hakkı</li>
+          <li>OCR ile otomatik okuma</li>
+          <li>Excel'e aktarım</li>
+          <li>Kullanılmayan taramalar yıla devir</li>
+        </ul>
+      </div>
+
+      <div class="pricing-card popular">
+        <div class="popular-badge">⭐ En Popüler</div>
+        <div class="plan-name">Profesyonel</div>
+        <div class="plan-price">499 <span>TL/ay</span></div>
+        <div class="plan-scans">1.000 Fiş Tarama</div>
+        <ul class="plan-features">
+          <li>1.000 fiş tarama hakkı</li>
+          <li>Aylık sınırsız kullanım</li>
+          <li>OCR ile otomatik okuma</li>
+          <li>Excel'e aktarım</li>
+          <li>Kullanılmayan taramalar yıla devir</li>
+        </ul>
+      </div>
+
+      <div class="pricing-card">
+        <div class="plan-name">Kurumsal</div>
+        <div class="plan-price">999 <span>TL/ay</span></div>
+        <div class="plan-scans">2.500 Fiş Tarama</div>
+        <ul class="plan-features">
+          <li>2.500 fiş tarama hakkı</li>
+          <li>5 kullanıcı</li>
+          <li>Şirket &amp; işletmeler için</li>
+          <li>Sınırsız kullanım</li>
+          <li>OCR ile otomatik okuma</li>
+          <li>Excel'e aktarım</li>
+          <li>Kullanılmayan taramalar yıla devir</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="pricing-note">
+      🔄 <strong>Kullanılmayan taramalar sonraki yıla devredilir</strong> — satın aldığınız tarama haklarını kaybetmezsiniz.
     </div>
   </div>
 </div>
@@ -357,6 +538,10 @@ function exportExcel() {
   a.download = `fisler_${new Date().toLocaleDateString('tr-TR').replace(/\./g,'-')}.csv`;
   a.click();
 }
+
+document.getElementById('pricing-overlay').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('show');
+});
 </script>
 </body>
 </html>
